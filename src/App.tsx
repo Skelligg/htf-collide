@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import LandingPage from "./pages/LandingPage";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import Problem1 from "./pages/Problem1.tsx";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ function App() {
                 <BrowserRouter>
                     <Routes>
                         <Route path="/" element={<LandingPage />} />
+                        <Route path="/problem1" element={<Problem1 />} />
                     </Routes>
                 </BrowserRouter>
             </QueryClientProvider>
