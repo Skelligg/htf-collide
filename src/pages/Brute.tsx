@@ -41,12 +41,8 @@ export default function Brute() {
     return (
         <Box sx={{ minHeight: '80vh', pb: 6, color: '#fff' }}>
             <Box sx={{ maxWidth: 1100, margin: '0 auto', px: 3, pt: 6 }}>
-                <Typography variant="h3" sx={{ mb: 1, fontWeight: 800 }}>
-                    Brute Force Mission
-                </Typography>
                 <Typography sx={{ mb: 3, color: 'rgba(255,255,255,0.8)' }}>
                     A small embedded Python terminal lets you experiment. The runtime runs locally in your browser via Pyodide.
-                    The mission secret is hardcoded as <code>{secretValue}</code> and available as the Python variable <code>SECRET</code>.
                 </Typography>
 
                 <Paper sx={{ p: 3, background: 'rgba(255,255,255,0.03)' }} elevation={6}>
@@ -153,14 +149,12 @@ json.dumps({"correct": _correct, "output": _output})
             if (parsed.correct) {
                 // show success prompt
                 // NOTE: Using a custom modal is preferred over alert() in production.
-                alert('✅ Correct — your code found the secret number!');
             }
         } catch (err: any) {
             const errText = String(err || 'Unknown error');
             // If the special exception bubbled up (rare because we handled it), detect it
             if (errText.includes('__CORRECT__')) {
                 // NOTE: Using a custom modal is preferred over alert() in production.
-                alert('✅ Correct — your code found the secret number!');
                 setOutput('Code executed successfully and found the secret.');
             } else {
                 setOutput(errText);
