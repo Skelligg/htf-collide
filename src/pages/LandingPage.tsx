@@ -1,13 +1,28 @@
-import {useRef, useState} from "react";
-import { Box, Typography, IconButton } from "@mui/material";
+import { useState, useRef } from "react";
+import {
+    Box,
+    Typography,
+    IconButton,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+} from "@mui/material";
 import Door from "../components/Door";
 import { styled, keyframes } from "@mui/material/styles";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import background from "../assets/background.gif";
 import music from "../assets/music.mp3";
+import seaweed from "../assets/seaweed.jpg";
+import door1 from "../assets/door1.jpg";
+import door2 from "../assets/door2.jpg";
+import door3 from "../assets/door3.jpg";
 // @ts-ignore
 import "@fontsource/audiowide";
+import { useProblemSummaries } from "../hooks/useProblems";
+import { useNavigate } from "react-router-dom";
 
 // bubble animation
 const floatUp = keyframes`
@@ -78,6 +93,33 @@ const fadeIn = keyframes`
 export default function LandingPage() {
     const [playing, setPlaying] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const { data: problems, isLoading, error } = useProblemSummaries();
+
+    const [selectedProblem, setSelectedProblem] = useState<{
+        id: number;
+        name: string;
+        description: string;
+    } | null>(null);
+
+    const navigate = useNavigate();
+
+    const handleDoorClick = (problem: any) => {
+        setSelectedProblem({
+            id: problem.problemId,
+            name: problem.problemName,
+            description: problem.problemDescription,
+        });
+    };
+
+    const handleEnter = () => {
+        if (selectedProblem) {
+            navigate(`/problems/${selectedProblem.id}`);
+        }
+    };
+
+    if (isLoading) return <div>Loading...</div>;
+    if (error || !problems) return <div>Error loading problems</div>;
+
 
     const toggleAudio = async () => {
         if (!audioRef.current) return;
@@ -205,7 +247,6 @@ export default function LandingPage() {
                 />
             ))}
 
-            {/* Doors */}
             <Box
                 mt={5}
                 sx={{
@@ -217,10 +258,76 @@ export default function LandingPage() {
                     zIndex: 6,
                 }}
             >
-                <Door title="Challenge 1" color="#0077b6" locked={false} />
-                <Door title="Challenge 2" color="#0096c7" locked={true} />
-                <Door title="Challenge 3" color="#00b4d8" locked={true} />
+                {problems.map((p, idx) => (
+                    <Door
+                        key={idx}
+                        title={p.problemName}
+                        description={p.problemDescription}
+                        doorImage={[door1, door2, door3][idx % 3]}
+                        mossImage={seaweed}
+                        locked={idx !== 0} // for example, first unlocked, rest locked
+                        onClick={() => handleDoorClick(p)}
+                    />
+                ))}
             </Box>
+
+            <Dialog
+                open={!!selectedProblem}
+                onClose={() => setSelectedProblem(null)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        backgroundColor: "rgba(10,30,50,0.95)",
+                        color: "#fff",
+                        backdropFilter: "blur(6px)",
+                        border: "1px solid rgba(0,200,255,0.2)",
+                        boxShadow: "0 0 25px rgba(0,200,255,0.3)",
+                    },
+                }}
+            >
+                {selectedProblem && (
+                    <>
+                        <DialogTitle
+                            sx={{
+                                fontFamily: "'Audiowide', cursive",
+                                textAlign: "center",
+                                color: "#00e0ff",
+                            }}
+                        >
+                            {selectedProblem.name}
+                        </DialogTitle>
+                        <DialogContent>
+                            <Typography sx={{ mt: 1, fontSize: "1rem" }}>
+                                {selectedProblem.description}
+                            </Typography>
+                        </DialogContent>
+                        <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
+                            <Button
+                                onClick={() => setSelectedProblem(null)}
+                                sx={{ color: "#ccc" }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleEnter}
+                                variant="contained"
+                                sx={{
+                                    background: "linear-gradient(45deg, #00d0ff, #00ffb0)",
+                                    color: "#000",
+                                    fontWeight: "bold",
+                                    px: 3,
+                                    "&:hover": {
+                                        background: "linear-gradient(45deg, #00aaff, #00ffcc)",
+                                    },
+                                }}
+                            >
+                                Enter Mission
+                            </Button>
+                        </DialogActions>
+                    </>
+                )}
+            </Dialog>
         </Box>
     );
 }
