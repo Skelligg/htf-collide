@@ -16,13 +16,20 @@ const DoorCard = styled(Card)<{ doorColor?: string }>(({ doorColor }) => ({
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
-    boxShadow: "0 0 30px rgba(0, 0, 50, 0.7)",
-    transition: "transform 0.3s",
+    boxShadow: `
+    inset 0 0 50px rgba(0,0,30,0.8),
+    0 0 30px rgba(0,150,255,0.6)
+  `,
+    transition: "transform 0.3s, box-shadow 0.3s",
     "&:hover": {
         transform: "scale(1.05)",
-        boxShadow: "0 0 50px rgba(0, 150, 255, 0.8)"
+        boxShadow: `
+      inset 0 0 70px rgba(0,0,50,0.9),
+      0 0 60px rgba(0,200,255,0.8)
+    `
     }
 }));
+
 
 const LockedOverlay = styled("div")({
     position: "absolute",
