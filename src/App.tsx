@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import LandingPage from "./pages/LandingPage";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import Problem1 from "./pages/Problem1.tsx";
+import BruteForceMissionPage from "./pages/bruteForceMissionPage";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ function App() {
                     <Routes>
                         <Route path="/" element={<LandingPage />} />
                         <Route path="/problem1" element={<Problem1 />} />
+                        <Route path="/bruteforce" element={<BruteForceMissionPage />} />
                     </Routes>
                 </BrowserRouter>
             </QueryClientProvider>
