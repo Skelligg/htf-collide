@@ -34,7 +34,7 @@ function indentCode(code: string, spaces = 4) {
         .join('\n');
 }
 
-export default function BruteForceMissionPage() {
+export default function Problem3() {
     // FIXED: Hard-code the secret variable to 55 as requested.
     const secretValue = 55;
 
