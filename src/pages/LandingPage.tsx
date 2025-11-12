@@ -50,7 +50,7 @@ const Bubble = styled("div")<{ size?: number; left?: number }>(({ size = 10, lef
 
 // Light rays overlay
 const LightRays = styled("div")({
-    position: "absolute",
+    position: "fixed",
     inset: 0,
     pointerEvents: "none",
     zIndex: 4,
@@ -60,7 +60,7 @@ const LightRays = styled("div")({
         left: "50%",
         top: "-20%",
         width: "120%",
-        height: "80px", // <-- problem: unit missing
+        height: "80px",
         transform: "translateX(-50%) rotate(-6deg)",
         background:
             "radial-gradient(ellipse at top center, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 30%, transparent 60%)",
@@ -73,7 +73,7 @@ const LightRays = styled("div")({
         left: "10%",
         top: "-10%",
         width: "80%",
-        height: "140%", // good here
+        height: "140%",
         transform: "translateX(0) rotate(4deg)",
         background:
             "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.00) 30%)",
@@ -86,8 +86,8 @@ const LightRays = styled("div")({
 
 // Fade-in keyframes
 const fadeIn = keyframes`
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+    0% { opacity: 0; }
+    100% { opacity: 1; }
 `;
 
 export default function LandingPage() {
@@ -144,6 +144,7 @@ export default function LandingPage() {
                 backgroundSize: "cover",
                 backgroundRepeat: "no-repeat",
                 backgroundPosition: "center",
+                backgroundAttachment: "fixed",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -151,21 +152,20 @@ export default function LandingPage() {
                 padding: 0,
                 color: "#fff",
                 width: "100vw",
-                height: "100vh",
                 maxWidth: "100vw",
                 overflowX: "hidden",
                 position: "relative",
-                animation: `${fadeIn} 2.5s ease-out forwards`, // fade-in animation
+                animation: `${fadeIn} 2.5s ease-out forwards`,
             }}
         >
 
             {/* Blue filter overlay */}
             <Box
                 sx={{
-                    position: "absolute",
-                    inset: 0, // top:0; left:0; right:0; bottom:0
-                    backgroundColor: "rgba(0, 60, 150, 0.3)", // semi-transparent blue
-                    pointerEvents: "none", // so it doesn’t block clicks
+                    position: "fixed",
+                    inset: 0,
+                    backgroundColor: "rgba(0, 60, 150, 0.3)",
+                    pointerEvents: "none",
                     zIndex: 1,
                 }}
             />
@@ -175,7 +175,7 @@ export default function LandingPage() {
             {/* Vignette */}
             <Box
                 sx={{
-                    position: "absolute",
+                    position: "fixed",
                     inset: 0,
                     background:
                         "radial-gradient(ellipse at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.6) 100%)",
@@ -187,7 +187,7 @@ export default function LandingPage() {
             {/* Audio */}
             <audio ref={audioRef} loop preload="auto" src={music} />
 
-            <Box sx={{ position: "absolute", top: 16, right: 16, zIndex: 10 }}>
+            <Box sx={{ position: "fixed", top: 16, right: 16, zIndex: 10 }}>
                 <IconButton
                     onClick={toggleAudio}
                     size="large"
@@ -203,7 +203,7 @@ export default function LandingPage() {
 
             <Typography
                 variant="h3"
-                mb={2} // smaller bottom margin
+                mb={2}
                 align="center"
                 sx={{
                     zIndex: 6,
@@ -221,7 +221,7 @@ export default function LandingPage() {
 
             <Typography
                 variant="h5"
-                mt={-1} // slight negative margin to pull it closer
+                mt={-1}
                 align="center"
                 sx={{
                     fontFamily: "'Audiowide', cursive",
@@ -265,7 +265,7 @@ export default function LandingPage() {
                         description={p.problemDescription}
                         doorImage={[door1, door2, door3][idx % 3]}
                         mossImage={seaweed}
-                        locked={idx !== 0} // for example, first unlocked, rest locked
+                        locked={idx !== 0}
                         onClick={() => handleDoorClick(p)}
                     />
                 ))}
