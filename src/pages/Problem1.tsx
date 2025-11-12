@@ -75,24 +75,44 @@ export default function Problem1() {
         setAnswers((prev) => ({ ...prev, [missionId]: value }));
     };
 
-// Updated handleVerify function
-    const handleVerify = (missionId: string) => {
+    // Updated handleVerify: accept original missionId (for looking up answers) and optional numericMissionId
+    const handleVerify = (missionId: string | number, missionIndex?: number, numericMissionId?: number) => {
         if (!problem) return;
-        const answer = answers[missionId] || '';
+
+        // Use provided numericMissionId if available, otherwise use precomputed id for the index
+        let mid: number | undefined = typeof numericMissionId === 'number' ? numericMissionId : undefined;
+        if (mid === undefined) {
+            if (typeof missionIndex === 'number' && missionIndex >= 0 && missionIndex < missionNumericIds.length) {
+                mid = missionNumericIds[missionIndex];
+            } else {
+                // last resort: try parsing numeric id from missionId
+                const parsed = typeof missionId === 'string' ? Number(missionId) : (missionId as number);
+                if (Number.isFinite(parsed) && Number.isInteger(parsed) && parsed > 0) mid = parsed;
+            }
+        }
+
+        if (!mid || !Number.isInteger(mid) || mid <= 0) {
+            // invalid mission id, show error in UI and abort
+            setVerificationResults((prev) => ({ ...prev, [String(missionId)]: null }));
+            console.warn('Invalid missionId — cannot normalize to numeric id; aborting verify:', missionId, '->', mid);
+            return;
+        }
+
+        const pid = (problem as any)?.id ?? 1; // fallback to 1 if backend doesn't provide an id
+        const answer = answers[String(missionId)] || '';
+
         verifyMutation.mutate(
-            { problemId: 1, missionId: Number(missionId), answer },
+            { problemId: Number(pid), missionId: Number(mid), answer },
             {
                 onSuccess: (isCorrect) => {
-                    // Update verification state for this mission
-                    setVerificationResults((prev) => ({ ...prev, [missionId]: isCorrect }));
+                    setVerificationResults((prev) => ({ ...prev, [String(mid)]: isCorrect }));
                 },
                 onError: () => {
-                    setVerificationResults((prev) => ({ ...prev, [missionId]: null }));
+                    setVerificationResults((prev) => ({ ...prev, [String(mid)]: null }));
                 },
             }
         );
     };
-
 
     if (isLoading)
         return (
@@ -112,6 +132,12 @@ export default function Problem1() {
         );
 
     const missions = problem?.mission || [];
+
+    // Precompute a normalized numeric id for each mission (prefer numeric m.id, otherwise index+1)
+    const missionNumericIds = missions.map((m, i) => {
+        const numeric = Number(m.id);
+        return Number.isFinite(numeric) && numeric > 0 ? numeric : i + 1;
+    });
 
     return (
         <Box
@@ -219,91 +245,98 @@ export default function Problem1() {
 
             {/* Mission sections */}
             <Box sx={{ width: '100%', maxWidth: 1100, mt: 6, mb: 12, position: 'relative', zIndex: 6 }}>
-                {missions.map((m, i) => (
-                    <motion.section
-                        key={m.id}
-                        ref={(el) => { missionRefs.current[i] = el; }}
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, margin: '-18% 0px -18% 0px' }}
-                        variants={sectionVariants}
-                        style={{
-                            display: 'flex',
-                            gap: 20,
-                            alignItems: 'flex-start',
-                            background: 'rgba(0,0,0,0.6)',
-                            borderRadius: 14,
-                            padding: '28px',
-                            marginBottom: 28,
-                            boxShadow: '0 12px 40px rgba(0,0,0,0.45)',
-                            borderLeft: `6px solid rgba(155,231,255,0.08)`,
-                        }}
-                    >
-                        <Box sx={{ flex: 1 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-                                <Box>
-                                    <Typography variant="h5" sx={{ fontWeight: '800', color: '#dff9ff' }}>
-                                        {m.name}
-                                    </Typography>
-                                    <Typography sx={{ mt: 0.5, color: 'rgba(255,255,255,0.9)' }}>{m.objective}</Typography>
+                {missions.map((m, i) => {
+                    // use precomputed numeric id for this mission
+                    const numericId = String(missionNumericIds[i]);
+                    const verificationState = verificationResults[numericId];
+
+                    return (
+                        <motion.section
+                            key={m.id}
+                            ref={(el) => { missionRefs.current[i] = el; }}
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, margin: '-18% 0px -18% 0px' }}
+                            variants={sectionVariants}
+                            style={{
+                                display: 'flex',
+                                gap: 20,
+                                alignItems: 'flex-start',
+                                background: 'rgba(0,0,0,0.6)',
+                                borderRadius: 14,
+                                padding: '28px',
+                                marginBottom: 28,
+                                boxShadow: '0 12px 40px rgba(0,0,0,0.45)',
+                                borderLeft: `6px solid rgba(155,231,255,0.08)`,
+                            }}
+                        >
+                            <Box sx={{ flex: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+                                    <Box>
+                                        <Typography variant="h5" sx={{ fontWeight: '800', color: '#dff9ff' }}>
+                                            {m.name}
+                                        </Typography>
+                                        <Typography sx={{ mt: 0.5, color: 'rgba(255,255,255,0.9)' }}>{m.objective}</Typography>
+                                    </Box>
+                                </Box>
+
+                                <Typography sx={{ mt: 2, fontStyle: 'italic', color: 'rgba(255,255,255,0.75)' }}>
+                                    Format: {m.parameters}
+                                </Typography>
+
+                                <Box sx={{ mt: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'center' }}>
+                                    <Button
+                                        variant="contained"
+                                        sx={{ background: '#00b4d8', minWidth: 140 }}
+                                        onClick={() => setOpenInput((prev) => ({ ...prev, [String(m.id)]: !prev[String(m.id)] }))}
+                                    >
+                                        Try Challenge
+                                    </Button>
+
+                                    {openInput[String(m.id)] && (
+                                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                            <TextField
+                                                size="small"
+                                                placeholder="Type answer..."
+                                                value={answers[String(m.id)] || ''}
+                                                onChange={(e) => handleInputChange(String(m.id), e.target.value)}
+                                                sx={{ background: 'rgba(255,255,255,0.04)', input: { color: '#fff' } }}
+                                            />
+                                            <Button
+                                                onClick={() => handleVerify(m.id, i, missionNumericIds[i])}
+                                                variant="contained"
+                                                sx={{ background: '#0077b6' }}
+                                            >
+                                                Submit
+                                            </Button>
+
+                                            {/* Verification feedback (use normalized numeric key) */}
+                                            {verificationState !== undefined && verificationState !== null && (
+                                                <Typography color={verificationState ? 'lightgreen' : 'salmon'} sx={{ fontSize: 18 }}>
+                                                    {verificationState ? '✅ Correct' : '❌ Wrong'}
+                                                </Typography>
+                                            )}
+                                            {verificationState === null && (
+                                                <Typography color="salmon">Error verifying answer</Typography>
+                                            )}
+                                        </Box>
+                                    )}
+
                                 </Box>
                             </Box>
 
-                            <Typography sx={{ mt: 2, fontStyle: 'italic', color: 'rgba(255,255,255,0.75)' }}>
-                                Format: {m.parameters}
-                            </Typography>
-
-                            <Box sx={{ mt: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'center' }}>
-                                <Button
-                                    variant="contained"
-                                    sx={{ background: '#00b4d8', minWidth: 140 }}
-                                    onClick={() => setOpenInput((prev) => ({ ...prev, [String(m.id)]: !prev[String(m.id)] }))}
-                                >
-                                    Try Challenge
-                                </Button>
-
-                                {openInput[String(m.id)] && (
-                                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                                        <TextField
-                                            size="small"
-                                            placeholder="Type answer..."
-                                            value={answers[String(m.id)] || ''}
-                                            onChange={(e) => handleInputChange(String(m.id), e.target.value)}
-                                            sx={{ background: 'rgba(255,255,255,0.04)', input: { color: '#fff' } }}
-                                        />
-                                        <Button
-                                            onClick={() => handleVerify(String(m.id))}
-                                            variant="contained"
-                                            sx={{ background: '#0077b6' }}
-                                        >
-                                            Submit
-                                        </Button>
-
-                                        {/* Verification feedback */}
-                                        {verificationResults[String(m.id)] !== undefined && verificationResults[String(m.id)] !== null && (
-                                            <Typography color={verificationResults[String(m.id)] ? 'lightgreen' : 'salmon'} sx={{ fontSize: 18 }}>
-                                                {verificationResults[String(m.id)] ? '✅ Correct' : '❌ Wrong'}
-                                            </Typography>
-                                        )}
-                                        {verificationResults[String(m.id)] === null && (
-                                            <Typography color="salmon">Error verifying answer</Typography>
-                                        )}
-                                    </Box>
-                                )}
-
+                            {/* Narrow meta column */}
+                            <Box sx={{ width: 160, display: { xs: 'none', md: 'block' } }}>
+                                <Box sx={{ background: 'rgba(0,0,0,0.25)', padding: 2, borderRadius: 8, textAlign: 'center' }}>
+                                    <Typography sx={{ fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>Difficulty</Typography>
+                                    <Typography sx={{ fontSize: 22, fontWeight: 800, mt: 1 }}>{m.difficulty ?? '-'}</Typography>
+                                    <Typography sx={{ mt: 1, color: 'rgba(255,255,255,0.7)' }}>Attempts: {m.remainingAttempts ?? '-'}</Typography>
+                                </Box>
                             </Box>
-                        </Box>
+                        </motion.section>
+                    );
+                })}
 
-                        {/* Narrow meta column */}
-                        <Box sx={{ width: 160, display: { xs: 'none', md: 'block' } }}>
-                            <Box sx={{ background: 'rgba(0,0,0,0.25)', padding: 2, borderRadius: 8, textAlign: 'center' }}>
-                                <Typography sx={{ fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>Difficulty</Typography>
-                                <Typography sx={{ fontSize: 22, fontWeight: 800, mt: 1 }}>{m.difficulty ?? '-'}</Typography>
-                                <Typography sx={{ mt: 1, color: 'rgba(255,255,255,0.7)' }}>Attempts: {m.remainingAttempts ?? '-'}</Typography>
-                            </Box>
-                        </Box>
-                    </motion.section>
-                ))}
             </Box>
 
             {/* Scroll to top */}
@@ -318,3 +351,4 @@ export default function Problem1() {
         </Box>
     );
 }
+

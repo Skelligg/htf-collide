@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import Problem1 from "./pages/Problem1.tsx";
 import BruteForceMissionPage from "./pages/bruteForceMissionPage";
 import IconButton from "@mui/material/IconButton";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
@@ -64,7 +63,6 @@ function App() {
                 <BrowserRouter>
                     <Routes>
                         <Route path="/" element={<LandingPage />} />
-                        <Route path="/problem1" element={<Problem1 />} />
                         <Route path="/bruteforce" element={<BruteForceMissionPage />} />
                         <Route path="/problems/1" element={<Problem1 />} />
                     </Routes>
