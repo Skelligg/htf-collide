@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { Box, Typography, IconButton, Button, TextField, Chip } from '@mui/material';
+import { Box, Typography, IconButton, Button, TextField } from '@mui/material';
 import { styled, keyframes } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -42,23 +42,21 @@ export default function Problem1() {
     const [openInput, setOpenInput] = useState<Record<string, boolean>>({});
     const verifyMutation = useVerifyAnswer();
 
-    // Submarine vertical position (px) that follows scroll
     const [subTop, setSubTop] = useState<number>(() => Math.round(window?.innerHeight * 0.25 || 200));
+    const [verificationResults, setVerificationResults] = useState<Record<string, boolean | null>>({});
+
 
     useEffect(() => {
-        // Handler computes a clamped top position so the submarine follows scroll smoothly
         const handleScroll = () => {
             const scrollY = window.scrollY || 0;
             const docHeight = document.documentElement.scrollHeight - window.innerHeight || 1;
             const progress = Math.max(0, Math.min(1, scrollY / docHeight));
-            // Map progress [0..1] to top range between 18vh and 60vh
             const minVh = window.innerHeight * 0.18;
             const maxVh = window.innerHeight * 0.6;
             const top = Math.round(minVh + (maxVh - minVh) * progress);
             setSubTop(top);
         };
 
-        // Initial position
         handleScroll();
         window.addEventListener('scroll', handleScroll, { passive: true });
         window.addEventListener('resize', handleScroll);
@@ -77,14 +75,24 @@ export default function Problem1() {
         setAnswers((prev) => ({ ...prev, [missionId]: value }));
     };
 
+// Updated handleVerify function
     const handleVerify = (missionId: string) => {
         if (!problem) return;
         const answer = answers[missionId] || '';
         verifyMutation.mutate(
             { problemId: 1, missionId: Number(missionId), answer },
-            { onSuccess: () => refetch() }
+            {
+                onSuccess: (isCorrect) => {
+                    // Update verification state for this mission
+                    setVerificationResults((prev) => ({ ...prev, [missionId]: isCorrect }));
+                },
+                onError: () => {
+                    setVerificationResults((prev) => ({ ...prev, [missionId]: null }));
+                },
+            }
         );
     };
+
 
     if (isLoading)
         return (
@@ -173,11 +181,11 @@ export default function Problem1() {
                             key={m.id}
                             onClick={() => scrollTo(i)}
                             sx={{
-                                background: 'rgba(255,255,255,0.06)',
+                                background: 'rgba(0,0,0,0.3)',
                                 color: '#9be7ff',
                                 textTransform: 'none',
                                 fontWeight: '600',
-                                '&:hover': { background: 'rgba(255,255,255,0.12)' },
+                                '&:hover': { background: 'rgba(0,0,0,0.45)' },
                             }}
                         >
                             {m.name}
@@ -223,7 +231,7 @@ export default function Problem1() {
                             display: 'flex',
                             gap: 20,
                             alignItems: 'flex-start',
-                            background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))',
+                            background: 'rgba(0,0,0,0.6)',
                             borderRadius: 14,
                             padding: '28px',
                             marginBottom: 28,
@@ -239,20 +247,13 @@ export default function Problem1() {
                                     </Typography>
                                     <Typography sx={{ mt: 0.5, color: 'rgba(255,255,255,0.9)' }}>{m.objective}</Typography>
                                 </Box>
-
                             </Box>
 
-                            <Typography sx={{ mt: 2, fontStyle: 'italic', color: 'rgba(255,255,255,0.75)' }}>Hint: {m.parameters}</Typography>
+                            <Typography sx={{ mt: 2, fontStyle: 'italic', color: 'rgba(255,255,255,0.75)' }}>
+                                Format: {m.parameters}
+                            </Typography>
 
                             <Box sx={{ mt: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'center' }}>
-                                <Button
-                                    variant="outlined"
-                                    sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.12)', minWidth: 120 }}
-                                    onClick={() => window.open('/')}
-                                >
-                                    Inspect
-                                </Button>
-
                                 <Button
                                     variant="contained"
                                     sx={{ background: '#00b4d8', minWidth: 140 }}
@@ -270,25 +271,32 @@ export default function Problem1() {
                                             onChange={(e) => handleInputChange(String(m.id), e.target.value)}
                                             sx={{ background: 'rgba(255,255,255,0.04)', input: { color: '#fff' } }}
                                         />
-                                        <Button onClick={() => handleVerify(String(m.id))} variant="contained" sx={{ background: '#0077b6' }}>
+                                        <Button
+                                            onClick={() => handleVerify(String(m.id))}
+                                            variant="contained"
+                                            sx={{ background: '#0077b6' }}
+                                        >
                                             Submit
                                         </Button>
 
-                                        {verifyMutation.isLoading && <Typography sx={{ ml: 1 }}>Verifying...</Typography>}
-                                        {verifyMutation.isError && <Typography color="salmon">Error submitting</Typography>}
-                                        {verifyMutation.isSuccess && (
-                                            <Typography color={verifyMutation.data ? 'lightgreen' : 'salmon'}>
-                                                {verifyMutation.data ? 'Correct ✅' : 'Wrong ❌'}
+                                        {/* Verification feedback */}
+                                        {verificationResults[String(m.id)] !== undefined && verificationResults[String(m.id)] !== null && (
+                                            <Typography color={verificationResults[String(m.id)] ? 'lightgreen' : 'salmon'} sx={{ fontSize: 18 }}>
+                                                {verificationResults[String(m.id)] ? '✅ Correct' : '❌ Wrong'}
                                             </Typography>
+                                        )}
+                                        {verificationResults[String(m.id)] === null && (
+                                            <Typography color="salmon">Error verifying answer</Typography>
                                         )}
                                     </Box>
                                 )}
+
                             </Box>
                         </Box>
 
-                        {/* Narrow meta column for visuals */}
+                        {/* Narrow meta column */}
                         <Box sx={{ width: 160, display: { xs: 'none', md: 'block' } }}>
-                            <Box sx={{ background: 'rgba(255,255,255,0.02)', padding: 2, borderRadius: 8, textAlign: 'center' }}>
+                            <Box sx={{ background: 'rgba(0,0,0,0.25)', padding: 2, borderRadius: 8, textAlign: 'center' }}>
                                 <Typography sx={{ fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>Difficulty</Typography>
                                 <Typography sx={{ fontSize: 22, fontWeight: 800, mt: 1 }}>{m.difficulty ?? '-'}</Typography>
                                 <Typography sx={{ mt: 1, color: 'rgba(255,255,255,0.7)' }}>Attempts: {m.remainingAttempts ?? '-'}</Typography>

@@ -46,8 +46,6 @@ const Bubble = styled("div")<{ size?: number; left?: number }>(({ size = 10, lef
     pointerEvents: "none",
 }));
 
-
-
 // Light rays overlay
 const LightRays = styled("div")({
     position: "fixed",
@@ -83,7 +81,6 @@ const LightRays = styled("div")({
     },
 });
 
-
 // Fade-in keyframes
 const fadeIn = keyframes`
     0% { opacity: 0; }
@@ -101,25 +98,27 @@ export default function LandingPage() {
         description: string;
     } | null>(null);
 
+    const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
     const navigate = useNavigate();
 
-    const handleDoorClick = (problem: any) => {
+    const handleDoorClick = (problem: any, index: number) => {
         setSelectedProblem({
             id: problem.problemId,
             name: problem.problemName,
             description: problem.problemDescription,
         });
+        setSelectedIndex(index);
     };
 
     const handleEnter = () => {
-        if (selectedProblem) {
-            navigate(`/problems/${selectedProblem.id}`);
+        if (selectedIndex !== null) {
+            navigate(`/problems/${selectedIndex + 1}`);
         }
     };
 
     if (isLoading) return <div>Loading...</div>;
     if (error || !problems) return <div>Error loading problems</div>;
-
 
     const toggleAudio = async () => {
         if (!audioRef.current) return;
@@ -158,7 +157,6 @@ export default function LandingPage() {
                 animation: `${fadeIn} 2.5s ease-out forwards`,
             }}
         >
-
             {/* Blue filter overlay */}
             <Box
                 sx={{
@@ -169,6 +167,7 @@ export default function LandingPage() {
                     zIndex: 1,
                 }}
             />
+
             {/* Light rays */}
             <LightRays />
 
@@ -187,6 +186,7 @@ export default function LandingPage() {
             {/* Audio */}
             <audio ref={audioRef} loop preload="auto" src={music} />
 
+            {/* Music toggle */}
             <Box sx={{ position: "fixed", top: 16, right: 16, zIndex: 10 }}>
                 <IconButton
                     onClick={toggleAudio}
@@ -201,6 +201,7 @@ export default function LandingPage() {
                 </IconButton>
             </Box>
 
+            {/* Title */}
             <Typography
                 variant="h3"
                 mb={2}
@@ -247,6 +248,7 @@ export default function LandingPage() {
                 />
             ))}
 
+            {/* Doors */}
             <Box
                 mt={5}
                 sx={{
@@ -266,11 +268,12 @@ export default function LandingPage() {
                         doorImage={[door1, door2, door3][idx % 3]}
                         mossImage={seaweed}
                         locked={idx !== 0}
-                        onClick={() => handleDoorClick(p)}
+                        onClick={() => handleDoorClick(p, idx)}
                     />
                 ))}
             </Box>
 
+            {/* Dialog */}
             <Dialog
                 open={!!selectedProblem}
                 onClose={() => setSelectedProblem(null)}
