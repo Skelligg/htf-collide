@@ -3,13 +3,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import Problem1 from "./pages/Problem1.tsx";
-import BruteForceMissionPage from "./pages/bruteForceMissionPage";
+import Problem3 from "./pages/Problem3.tsx";
+import Problem2 from "./pages/Problem2";
 import IconButton from "@mui/material/IconButton";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
 
 import LandingPage from "./pages/LandingPage";
-import Problem1 from "./pages/Problem1";
 import music from "./assets/music.mp3";
 
 const queryClient = new QueryClient();
@@ -64,9 +64,9 @@ function App() {
                 <BrowserRouter>
                     <Routes>
                         <Route path="/" element={<LandingPage />} />
-                        <Route path="/problem1" element={<Problem1 />} />
-                        <Route path="/bruteforce" element={<BruteForceMissionPage />} />
                         <Route path="/problems/1" element={<Problem1 />} />
+                        <Route path="/problems/2" element={<Problem2 />} />
+                        <Route path="/problems/3" element={<Problem3 />} />
                     </Routes>
                 </BrowserRouter>
             </QueryClientProvider>

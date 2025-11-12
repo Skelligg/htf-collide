@@ -91,6 +91,8 @@ export default function LandingPage() {
     const [playing, setPlaying] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const { data: problems, isLoading, error } = useProblemSummaries();
+    const [unlockedDoors, setUnlockedDoors] = useState<number[]>([]);
+
 
     const [selectedProblem, setSelectedProblem] = useState<{
         id: number;
@@ -103,6 +105,11 @@ export default function LandingPage() {
     const navigate = useNavigate();
 
     const handleDoorClick = (problem: any, index: number) => {
+        // temporarily mark the door as unlocked
+        if (!unlockedDoors.includes(index)) {
+            setUnlockedDoors(prev => [...prev, index]);
+        }
+
         setSelectedProblem({
             id: problem.problemId,
             name: problem.problemName,
@@ -110,6 +117,7 @@ export default function LandingPage() {
         });
         setSelectedIndex(index);
     };
+
 
     const handleEnter = () => {
         if (selectedIndex !== null) {
@@ -267,7 +275,7 @@ export default function LandingPage() {
                         description={p.problemDescription}
                         doorImage={[door1, door2, door3][idx % 3]}
                         mossImage={seaweed}
-                        locked={idx !== 0}
+                        locked={false}
                         onClick={() => handleDoorClick(p, idx)}
                     />
                 ))}
